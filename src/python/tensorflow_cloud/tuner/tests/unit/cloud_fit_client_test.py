@@ -121,7 +121,7 @@ class CloudFitClientTest(tf.test.TestCase):
         )
 
         self._mock_create.assert_called_with(
-            body=mock.ANY, parent="projects/{}".format(self._project_id)
+            body=mock.ANY, parent=f"projects/{self._project_id}"
         )
 
         _, fit_kwargs = list(self._mock_create.call_args)

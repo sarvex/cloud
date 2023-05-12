@@ -118,9 +118,7 @@ class CloudFitIntegrationTest(tf.test.TestCase):
             region=self._region,
             project_id=self._project_id,
             image_uri=self._image_uri,
-            job_id="cloud_fit_e2e_test_{}_{}".format(
-                _BUILD_ID.replace("-", "_"), "test_in_memory_data"
-            ),
+            job_id=f'cloud_fit_e2e_test_{_BUILD_ID.replace("-", "_")}_test_in_memory_data',
             epochs=2,
         )
         logging.info("test_in_memory_data submitted with job id: %s", job_id)

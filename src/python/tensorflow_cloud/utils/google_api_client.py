@@ -13,6 +13,7 @@
 # limitations under the License.
 """Utilities for Google API client."""
 
+
 import enum
 import json
 import os
@@ -25,7 +26,7 @@ from googleapiclient import discovery
 from googleapiclient import errors
 from googleapiclient import http as googleapiclient_http
 
-_TF_CLOUD_USER_AGENT_HEADER = "tf-cloud/" + version.__version__
+_TF_CLOUD_USER_AGENT_HEADER = f"tf-cloud/{version.__version__}"
 _POLL_INTERVAL_IN_SECONDS = 30
 _LOCAL_CONFIG_PATH = os.path.expanduser(
         "~/.config/tf_cloud/tf_cloud_config.json")
@@ -94,8 +95,7 @@ class TFCloudHttpRequest(googleapiclient_http.HttpRequest):
     # getter and setter instead.
     @classmethod
     def get_telemetry_dict(cls):
-        telemetry_dict = cls._telemetry_dict.copy()
-        return telemetry_dict
+        return cls._telemetry_dict.copy()
 
     @classmethod
     def set_telemetry_dict(cls, telemetry_dict: Dict[Text, Text]):
@@ -199,9 +199,7 @@ def get_or_set_consent_status()-> bool:
 def optout_metrics_reporting():
     """Set configuration to opt-out of client side metric reporting."""
 
-    config_data = {}
-    config_data["telemetry_rejected"] = True
-
+    config_data = {"telemetry_rejected": True}
     # Create the config path if it does not already exist
     os.makedirs(os.path.dirname(_LOCAL_CONFIG_PATH), exist_ok=True)
 
@@ -211,7 +209,7 @@ def optout_metrics_reporting():
     logging.info("Client side metrics reporting has been disabled.")
 
 
-def wait_for_aip_training_job_completion(job_id: Text, project_id: Text)->bool:
+def wait_for_aip_training_job_completion(job_id: Text, project_id: Text) -> bool:
     """Blocks until the AIP Training job is completed and returns the status.
 
     Args:
@@ -221,7 +219,7 @@ def wait_for_aip_training_job_completion(job_id: Text, project_id: Text)->bool:
         True if the job succeeded or it was cancelled, False if the job failed.
     """
     # Wait for AIP Training job to finish
-    job_name = "projects/{}/jobs/{}".format(project_id, job_id)
+    job_name = f"projects/{project_id}/jobs/{job_id}"
     # Disable cache_discovery to remove excessive info logs see:
     # https://github.com/googleapis/google-api-python-client/issues/299
     api_client = discovery.build("ml", "v1", cache_discovery=False)
@@ -251,7 +249,7 @@ def wait_for_aip_training_job_completion(job_id: Text, project_id: Text)->bool:
     return True
 
 
-def is_aip_training_job_running(job_id: Text, project_id: Text)->bool:
+def is_aip_training_job_running(job_id: Text, project_id: Text) -> bool:
     """Non-blocking call that checks if AIP Training job is running.
 
     Args:
@@ -261,7 +259,7 @@ def is_aip_training_job_running(job_id: Text, project_id: Text)->bool:
         True if the job is running, False if it has succeeded, failed, or it was
         cancelled.
     """
-    job_name = "projects/{}/jobs/{}".format(project_id, job_id)
+    job_name = f"projects/{project_id}/jobs/{job_id}"
     # Disable cache_discovery to remove excessive info logs see:
     # https://github.com/googleapis/google-api-python-client/issues/299
     api_client = discovery.build("ml", "v1", cache_discovery=False)
@@ -281,7 +279,7 @@ def stop_aip_training_job(job_id: Text, project_id: Text):
         job_id: ID for AIP training job.
         project_id: Project under which the AIP Training job is running.
     """
-    job_name = "projects/{}/jobs/{}".format(project_id, job_id)
+    job_name = f"projects/{project_id}/jobs/{job_id}"
     # Disable cache_discovery to remove excessive info logs see:
     # https://github.com/googleapis/google-api-python-client/issues/299
     api_client = discovery.build("ml", "v1", cache_discovery=False)

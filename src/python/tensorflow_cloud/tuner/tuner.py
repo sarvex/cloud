@@ -156,15 +156,15 @@ class CloudOracle(oracle_module.Oracle):
             objective = utils.convert_study_config_to_objective(study_config)
             hyperparameters = utils.convert_study_config_to_hps(study_config)
             self.study_config = study_config
-        else:
-            if not (objective and hyperparameters):
-                raise ValueError(
-                    "If study_config is not set, "
-                    "objective and hyperparameters must be set."
-                )
+        elif objective and hyperparameters:
             self.study_config = utils.make_study_config(objective,
                                                         hyperparameters)
 
+        else:
+            raise ValueError(
+                "If study_config is not set, "
+                "objective and hyperparameters must be set."
+            )
         super(CloudOracle, self).__init__(
             objective=objective,
             hyperparameters=hyperparameters,
@@ -189,8 +189,9 @@ class CloudOracle(oracle_module.Oracle):
         self.hyperparameters = hyperparameters
         self.max_trials = max_trials
 
-        self.study_id = study_id or "CloudTuner_study_{}".format(
-            datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.study_id = (
+            study_id
+            or f'CloudTuner_study_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}'
         )
 
         self.service = vizier_client.create_or_load_study(
@@ -261,9 +262,7 @@ class CloudOracle(oracle_module.Oracle):
         )
 
         tf.get_logger().info(
-            "Hyperparameters requested by tuner ({}): {} ".format(
-                tuner_id, keras_tuner_trial.hyperparameters.values
-            )
+            f"Hyperparameters requested by tuner ({tuner_id}): {keras_tuner_trial.hyperparameters.values} "
         )
 
         self._start_time = time.time()
@@ -297,9 +296,7 @@ class CloudOracle(oracle_module.Oracle):
                         {"metric": ob_name,
                          "value": float(metrics.get(ob_name))}
                     )
-                tf.get_logger().info(
-                    'Objective "{}" is not found in metrics.'.format(ob.name)
-                )
+                tf.get_logger().info(f'Objective "{ob.name}" is not found in metrics.')
                 continue
 
             metric_list.append(
@@ -334,15 +331,12 @@ class CloudOracle(oracle_module.Oracle):
         keras_tuner_trial = None
         for tuner_id, ongoing_trial in self.ongoing_trials.items():
             if ongoing_trial.trial_id == trial_id:
-                tf.get_logger().info(
-                    "End trial requested by tuner ({})".format(tuner_id)
-                )
+                tf.get_logger().info(f"End trial requested by tuner ({tuner_id})")
                 keras_tuner_trial = self.ongoing_trials.pop(tuner_id)
                 break
 
         if not keras_tuner_trial:
-            raise ValueError(
-                "Ongoing trial with id: {} not found.".format(trial_id))
+            raise ValueError(f"Ongoing trial with id: {trial_id} not found.")
 
         keras_tuner_trial.status = status
         if status == trial_module.TrialStatus.COMPLETED:
@@ -353,8 +347,7 @@ class CloudOracle(oracle_module.Oracle):
             infeasibility_reason = status
         else:
             raise ValueError(
-                'Unexpected status passed. Expected "COMPLETED" or '
-                '"INVALID", found {}'.format(status)
+                f'Unexpected status passed. Expected "COMPLETED" or "INVALID", found {status}'
             )
 
         vizier_trial = self.service.complete_trial(
@@ -597,10 +590,7 @@ class DistributingCloudTuner(tuner_module.Tuner):
         )
         # If study_id is not provided, CloudOracle creates one. Setting the
         # study_id to what CloudOracle generates, to ensure they are the same.
-        if study_id:
-            self._study_id = study_id
-        else:
-            self._study_id = oracle.study_id
+        self._study_id = study_id if study_id else oracle.study_id
         self.directory = directory
 
     def run_trial(self, trial, *fit_args, **fit_kwargs):
@@ -714,10 +704,8 @@ class DistributingCloudTuner(tuner_module.Tuner):
         if not google_api_client.wait_for_aip_training_job_completion(
             job_id, self._project_id):
             raise RuntimeError(
-                "AI Platform Training job failed, see logs for details at "
-                "https://console.cloud.google.com/ai-platform/jobs/"
-                "{}/charts/cpu?project={}"
-                .format(job_id, self._project_id))
+                f"AI Platform Training job failed, see logs for details at https://console.cloud.google.com/ai-platform/jobs/{job_id}/charts/cpu?project={self._project_id}"
+            )
 
         # Retrieve and report any remaining metrics
         training_metrics = self._get_remote_training_metrics(
@@ -776,10 +764,7 @@ class DistributingCloudTuner(tuner_module.Tuner):
         """
         # Set worker count as one less replica as one is dedicated as master
         worker_count = self._replica_count -1
-        worker_config = None
-        if worker_count > 0:
-            worker_config = self._replica_config
-
+        worker_config = self._replica_config if worker_count > 0 else None
         # TODO(b/170224999) Refactor _validate_cluster_config to a public method
         validate._validate_cluster_config(  # pylint: disable= protected-access
             chief_config=self._replica_config,

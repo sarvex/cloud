@@ -131,11 +131,10 @@ class _VizierClient(vizier_client_interface.VizierClientInterface):
 
         suggestions = operation["response"]
 
-        if "trials" not in suggestions:
-            if operation["response"]["studyState"] == "INACTIVE":
-                raise SuggestionInactiveError(
-                    "The study is stopped due to an internal error."
-                )
+        if "trials" not in suggestions and suggestions["studyState"] == "INACTIVE":
+            raise SuggestionInactiveError(
+                "The study is stopped due to an internal error."
+            )
         return suggestions["trials"]
 
     def report_intermediate_objective_value(
@@ -307,19 +306,15 @@ class _VizierClient(vizier_client_interface.VizierClientInterface):
                 name=study_name).execute()
         except errors.HttpError as e:
             if e.resp.status == http.HTTPStatus.NOT_FOUND.value:
-                raise ValueError(
-                    "DeleteStudy failed. Study not found: {}."
-                    .format(study_name))
+                raise ValueError(f"DeleteStudy failed. Study not found: {study_name}.")
             tf.get_logger().info("DeleteStudy failed.")
             raise
-        tf.get_logger().info("Study deleted: {}.".format(study_name))
+        tf.get_logger().info(f"Study deleted: {study_name}.")
 
     def _obtain_long_running_operation(self, resp):
         """Obtain the long-running operation."""
         op_id = resp["name"].split("/")[-1]
-        operation_name = "projects/{}/locations/{}/operations/{}".format(
-            self.project_id, self.region, op_id
-        )
+        operation_name = f"projects/{self.project_id}/locations/{self.region}/operations/{op_id}"
         try:
             get_op = (
                 self.service_client.projects()
@@ -338,10 +333,7 @@ class _VizierClient(vizier_client_interface.VizierClientInterface):
             sleep_time = self._polling_delay(num_attempts, polling_secs)
             num_attempts += 1
             tf.get_logger().info(
-                "Waiting for operation; attempt {}; "
-                "sleeping for {} seconds".format(
-                    num_attempts, sleep_time
-                )
+                f"Waiting for operation; attempt {num_attempts}; sleeping for {sleep_time} seconds"
             )
             time.sleep(sleep_time.total_seconds())
             if num_attempts > 30:  # about 10 minutes
@@ -371,17 +363,13 @@ class _VizierClient(vizier_client_interface.VizierClientInterface):
         return datetime.timedelta(seconds=interval)
 
     def _make_study_name(self):
-        return "projects/{}/locations/{}/studies/{}".format(
-            self.project_id, self.region, self.study_id
-        )
+        return f"projects/{self.project_id}/locations/{self.region}/studies/{self.study_id}"
 
     def _make_trial_name(self, trial_id):
-        return "projects/{}/locations/{}/studies/{}/trials/{}".format(
-            self.project_id, self.region, self.study_id, trial_id
-        )
+        return f"projects/{self.project_id}/locations/{self.region}/studies/{self.study_id}/trials/{trial_id}"
 
     def _make_parent_name(self):
-        return "projects/{}/locations/{}".format(self.project_id, self.region)
+        return f"projects/{self.project_id}/locations/{self.region}"
 
 
 def create_or_load_study(
@@ -434,7 +422,7 @@ def create_or_load_study(
         )
 
     # Creates or loads a study.
-    study_parent = "projects/{}/locations/{}".format(project_id, region)
+    study_parent = f"projects/{project_id}/locations/{region}"
 
     if study_config is None:
         # If study config is unspecified, assume that the study already exists.
@@ -490,9 +478,10 @@ def _get_study(
         study_should_exist: Indicates whether it should be assumed that the
             study with the given study_id exists.
     """
-    study_name = "{}/studies/{}".format(study_parent, study_id)
+    study_name = f"{study_parent}/studies/{study_id}"
     tf.get_logger().info(
-        "Study already exists: {}.\nLoad existing study...".format(study_name))
+        f"Study already exists: {study_name}.\nLoad existing study..."
+    )
     num_tries = 0
     while True:
         try:
@@ -506,9 +495,7 @@ def _get_study(
                     study_should_exist
                     and err.resp.status == http.HTTPStatus.NOT_FOUND.value
                 ):
-                    raise ValueError(
-                        "GetStudy failed. Study not found: {}.".format(study_id)
-                    )
+                    raise ValueError(f"GetStudy failed. Study not found: {study_id}.")
                 else:
                     raise RuntimeError(
                         "GetStudy failed. Max retries reached: {0!s}".format(

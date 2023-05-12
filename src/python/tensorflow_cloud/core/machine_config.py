@@ -52,7 +52,7 @@ class AcceleratorType(enum.Enum):
     @classmethod
     def validate(cls, key):
         if key not in cls.all():
-            raise ValueError("Invalid accelerator key provided: %s." % key)
+            raise ValueError(f"Invalid accelerator key provided: {key}.")
 
 
 class MachineConfig(object):
@@ -178,8 +178,8 @@ COMMON_MACHINE_CONFIGS = {
 
 def is_tpu_config(config):
     if config:
-        return (
-            config.accelerator_type == AcceleratorType.TPU_V2
-            or config.accelerator_type == AcceleratorType.TPU_V3
-        )
+        return config.accelerator_type in [
+            AcceleratorType.TPU_V2,
+            AcceleratorType.TPU_V3,
+        ]
     return False

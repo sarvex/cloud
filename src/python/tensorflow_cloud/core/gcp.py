@@ -50,7 +50,7 @@ def validate_machine_configuration(
 
     # For TPU workers created using AI platform CPU/memory specification is not
     # required.
-    if accelerator_type.value == "TPU_V2" or accelerator_type.value == "TPU_V3":
+    if accelerator_type.value in ["TPU_V2", "TPU_V3"]:
         cpu_cores = None
         memory = None
 
@@ -58,15 +58,7 @@ def validate_machine_configuration(
         cpu_cores, memory, accelerator_type.value, accelerator_count)
     if current_config not in valid_configurations:
         raise ValueError(
-            "Invalid machine configuration: cpu_cores:{}, memory:{}, "
-            "accelerator_type:{}, accelerator_count:{}. Please see the "
-            "following AI platform comptibility table for all valid "
-            "configurations: "
-            "https://cloud.google.com/ml-engine/docs/using-gpus#"
-            "compute-engine-machine-types-with-gpu. If you are using TPU "
-            "accelerator, please specify accelerator count as 8.".format(
-                cpu_cores, memory, str(accelerator_type), accelerator_count
-            )
+            f"Invalid machine configuration: cpu_cores:{cpu_cores}, memory:{memory}, accelerator_type:{str(accelerator_type)}, accelerator_count:{accelerator_count}. Please see the following AI platform comptibility table for all valid configurations: https://cloud.google.com/ml-engine/docs/using-gpus#compute-engine-machine-types-with-gpu. If you are using TPU accelerator, please specify accelerator count as 8."
         )
 
 
@@ -92,7 +84,7 @@ def get_accelerator_type(accl_type):
 
 def get_machine_type(cpu_cores, memory, accelerator_type):
     """Returns the GCP AI Platform machine type."""
-    if accelerator_type.value == "TPU_V2" or accelerator_type.value == "TPU_V3":
+    if accelerator_type.value in ["TPU_V2", "TPU_V3"]:
         return "cloud_tpu"
     machine_type_map = {
         (4, 15): "n1-standard-4",
@@ -430,55 +422,37 @@ def validate_job_labels(job_labels):
 
     if len(job_labels) > 64:
         raise ValueError(
-            "Invalid job labels: too many labels."
-            "Expecting at most 64 labels."
-            "Received {}.".format(len(job_labels))
+            f"Invalid job labels: too many labels.Expecting at most 64 labels.Received {len(job_labels)}."
         )
 
     for k in job_labels:
         v = job_labels[k]
         if not k or not k[0].islower():
             raise ValueError(
-                "Invalid job labels:"
-                "Label key must start with lowercase letters."
-                "Received {}.".format(k)
+                f"Invalid job labels:Label key must start with lowercase letters.Received {k}."
             )
         if not v or not v[0].islower():
             raise ValueError(
-                "Invalid job labels:"
-                "Label value must start with lowercase letters."
-                "Received {}.".format(v)
+                f"Invalid job labels:Label value must start with lowercase letters.Received {v}."
             )
 
         if len(k) > 63:
             raise ValueError(
-                "Invalid job labels:"
-                "Label key is too long."
-                "Expecting at most 63 characters."
-                "Received {}.".format(k)
+                f"Invalid job labels:Label key is too long.Expecting at most 63 characters.Received {k}."
             )
         if len(v) > 63:
             raise ValueError(
-                "Invalid job labels:"
-                "Label value is too long for key {}."
-                "Expecting at most 63 characters."
-                "Received {}.".format(k, v)
+                f"Invalid job labels:Label value is too long for key {k}.Expecting at most 63 characters.Received {v}."
             )
 
         if not re.match(r"^[a-z0-9_-]+$", k):
             raise ValueError(
-                "Invalid job labels:"
-                "Label key can only contain lowercase letters,"
-                "numeric characters, underscores and dashes."
-                "Received: {}.".format(k)
+                f"Invalid job labels:Label key can only contain lowercase letters,numeric characters, underscores and dashes.Received: {k}."
             )
 
         if not re.match(r"^[a-z0-9_-]+$", v):
             raise ValueError(
-                "Invalid job labels:"
-                "Label value can only contain lowercase letters,"
-                "numeric characters, underscores and dashes."
-                "Received: {}.".format(v)
+                f"Invalid job labels:Label value can only contain lowercase letters,numeric characters, underscores and dashes.Received: {v}."
             )
 
 
@@ -498,7 +472,5 @@ def validate_service_account(service_account):
         r"^.*@([a-z0-9\-]){6,30}\.iam\.gserviceaccount\.com",
         service_account):
         raise ValueError(
-            "Invalid service_account: service_account should follow "
-            "service-account-name@project-id.iam.gserviceaccount.com "
-            "Received: {}.".format(service_account)
+            f"Invalid service_account: service_account should follow service-account-name@project-id.iam.gserviceaccount.com Received: {service_account}."
         )

@@ -188,8 +188,7 @@ def get_preprocessed_entry_point(
         # This will support use case where the user's program has a
         # main method.
         _, entry_point_file_name = os.path.split(entry_point)
-        script_lines.append(
-            'exec(open("{}").read())\n'.format(entry_point_file_name))
+        script_lines.append(f'exec(open("{entry_point_file_name}").read())\n')
     else:
         if called_from_notebook:
             # Kaggle integration

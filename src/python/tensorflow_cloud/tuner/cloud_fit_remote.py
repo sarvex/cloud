@@ -52,7 +52,7 @@ flags.DEFINE_string(
 
 
 def _transformed_name(key):
-    return key + "_xf"
+    return f"{key}_xf"
 
 
 # TODO(b/183734637) Consiger using TFXIO to ingest data
@@ -110,10 +110,7 @@ def main(unused_argv):
     logging.set_verbosity(logging.INFO)
     if FLAGS.distribution_strategy not in SUPPORTED_DISTRIBUTION_STRATEGIES:
         raise ValueError(
-            "{} is not supported. Supported Strategies are {}".format(
-                FLAGS.distribution_strategy,
-                list(SUPPORTED_DISTRIBUTION_STRATEGIES.keys()),
-            )
+            f"{FLAGS.distribution_strategy} is not supported. Supported Strategies are {list(SUPPORTED_DISTRIBUTION_STRATEGIES.keys())}"
         )
 
     run(FLAGS.remote_dir, FLAGS.distribution_strategy)

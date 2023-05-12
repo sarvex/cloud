@@ -78,7 +78,7 @@ class TestContainerize(absltest.TestCase):
         lcb._create_docker_file()
 
         expected_docker_file_lines = [
-            "FROM tensorflow/tensorflow:{}-gpu\n".format(_TF_VERSION),
+            f"FROM tensorflow/tensorflow:{_TF_VERSION}-gpu\n",
             "WORKDIR /app/\n",
             "COPY /app/ /app/\n",
             'ENTRYPOINT ["python", "sample.py"]',
@@ -103,7 +103,7 @@ class TestContainerize(absltest.TestCase):
         lcb._create_docker_file()
 
         expected_docker_file_lines = [
-            "FROM tensorflow/tensorflow:{}-gpu\n".format(_TF_VERSION),
+            f"FROM tensorflow/tensorflow:{_TF_VERSION}-gpu\n",
             "WORKDIR /app/\n",
             "COPY /app/requirements.txt /app/requirements.txt\n",
             "RUN if [ -e requirements.txt ]; "
@@ -129,7 +129,7 @@ class TestContainerize(absltest.TestCase):
         lcb._create_docker_file()
 
         expected_docker_file_lines = [
-            "FROM tensorflow/tensorflow:{}-gpu\n".format(_TF_VERSION),
+            f"FROM tensorflow/tensorflow:{_TF_VERSION}-gpu\n",
             "WORKDIR /my_app/temp/\n",
             "COPY /my_app/temp/ /my_app/temp/\n",
             'ENTRYPOINT ["python", "sample.py"]',
@@ -193,7 +193,7 @@ class TestContainerize(absltest.TestCase):
         lcb._create_docker_file()
 
         expected_docker_file_lines = [
-            "FROM tensorflow/tensorflow:{}\n".format(_TF_VERSION),
+            f"FROM tensorflow/tensorflow:{_TF_VERSION}\n",
             "WORKDIR /app/\n",
             "COPY /app/ /app/\n",
             'ENTRYPOINT ["python", "sample.py"]',
@@ -213,7 +213,7 @@ class TestContainerize(absltest.TestCase):
         lcb._create_docker_file()
 
         expected_docker_file_lines = [
-            "FROM tensorflow/tensorflow:{}\n".format(_TF_VERSION),
+            f"FROM tensorflow/tensorflow:{_TF_VERSION}\n",
             "WORKDIR /app/\n",
             "RUN pip install cloud-tpu-client\n",
             "COPY /app/ /app/\n",
@@ -442,26 +442,28 @@ class TestContainerize(absltest.TestCase):
         self.assertEqual(builds_ret_val.create.call_count, 1)
         _, kwargs = builds_ret_val.create.call_args
 
-        request_dict = {}
-        request_dict["projectId"] = self.project_id
-        request_dict["timeout"] = "1200s"
-        request_dict["images"] = [["gcr.io/my-project/tf_cloud_train:abcde"]]
-        request_dict["options"] = {
-            "machineType": "N1_HIGHCPU_8"
-        }
-        request_dict["steps"] = [{
-            "name": "gcr.io/cloud-builders/docker",
-            "args": [
-                "build",
-                "-t",
-                "gcr.io/my-project/tf_cloud_train:abcde",
-                "."],
-        }]
-        request_dict["source"] = {
-            "storageSource": {
-                "bucket": "test_gcs_bucket",
-                "object": storage_object_name,
-            }
+        request_dict = {
+            "projectId": self.project_id,
+            "timeout": "1200s",
+            "images": [["gcr.io/my-project/tf_cloud_train:abcde"]],
+            "options": {"machineType": "N1_HIGHCPU_8"},
+            "steps": [
+                {
+                    "name": "gcr.io/cloud-builders/docker",
+                    "args": [
+                        "build",
+                        "-t",
+                        "gcr.io/my-project/tf_cloud_train:abcde",
+                        ".",
+                    ],
+                }
+            ],
+            "source": {
+                "storageSource": {
+                    "bucket": "test_gcs_bucket",
+                    "object": storage_object_name,
+                }
+            },
         }
         self.assertDictEqual(
             kwargs,
@@ -614,35 +616,31 @@ class TestContainerize(absltest.TestCase):
         self.assertEqual(builds_ret_val.create.call_count, 1)
         _, kwargs = builds_ret_val.create.call_args
 
-        request_dict = {}
-        request_dict["projectId"] = self.project_id
-        request_dict["timeout"] = "1200s"
-        request_dict["images"] = [[img_tag]]
-        request_dict["options"] = {
-            "machineType": "N1_HIGHCPU_8"
-        }
-        request_dict["steps"] = [{
-            "name": "gcr.io/cloud-builders/docker",
-            "entrypoint": "bash",
-            "args": [
-                "-c",
-                "docker pull gcr.io/test-name || exit 0",
+        request_dict = {
+            "projectId": self.project_id,
+            "timeout": "1200s",
+            "images": [[img_tag]],
+            "options": {"machineType": "N1_HIGHCPU_8"},
+            "steps": [
+                {
+                    "name": "gcr.io/cloud-builders/docker",
+                    "entrypoint": "bash",
+                    "args": [
+                        "-c",
+                        "docker pull gcr.io/test-name || exit 0",
+                    ],
+                },
+                {
+                    "name": "gcr.io/cloud-builders/docker",
+                    "args": ["build", "-t", img_tag, "--cache-from", img_tag, "."],
+                },
             ],
-        }, {
-            "name": "gcr.io/cloud-builders/docker",
-            "args": [
-                "build",
-                "-t",
-                img_tag,
-                "--cache-from",
-                img_tag,
-                "."],
-        }]
-        request_dict["source"] = {
-            "storageSource": {
-                "bucket": "test_gcs_bucket",
-                "object": storage_object_name,
-            }
+            "source": {
+                "storageSource": {
+                    "bucket": "test_gcs_bucket",
+                    "object": storage_object_name,
+                }
+            },
         }
         self.assertDictEqual(
             kwargs,
@@ -738,35 +736,38 @@ class TestContainerize(absltest.TestCase):
         self.assertEqual(builds_ret_val.create.call_count, 1)
         _, kwargs = builds_ret_val.create.call_args
 
-        request_dict = {}
-        request_dict["projectId"] = self.project_id
-        request_dict["timeout"] = "1200s"
-        request_dict["images"] = [[img_tag]]
-        request_dict["options"] = {
-            "machineType": "N1_HIGHCPU_8"
-        }
-        request_dict["steps"] = [{
-            "name": "gcr.io/cloud-builders/docker",
-            "entrypoint": "bash",
-            "args": [
-                "-c",
-                "docker pull gcr.io/test-name:0 || exit 0",
+        request_dict = {
+            "projectId": self.project_id,
+            "timeout": "1200s",
+            "images": [[img_tag]],
+            "options": {"machineType": "N1_HIGHCPU_8"},
+            "steps": [
+                {
+                    "name": "gcr.io/cloud-builders/docker",
+                    "entrypoint": "bash",
+                    "args": [
+                        "-c",
+                        "docker pull gcr.io/test-name:0 || exit 0",
+                    ],
+                },
+                {
+                    "name": "gcr.io/cloud-builders/docker",
+                    "args": [
+                        "build",
+                        "-t",
+                        "gcr.io/test-name:1",
+                        "--cache-from",
+                        "gcr.io/test-name:0",
+                        ".",
+                    ],
+                },
             ],
-        }, {
-            "name": "gcr.io/cloud-builders/docker",
-            "args": [
-                "build",
-                "-t",
-                "gcr.io/test-name:1",
-                "--cache-from",
-                "gcr.io/test-name:0",
-                "."],
-        }]
-        request_dict["source"] = {
-            "storageSource": {
-                "bucket": "test_gcs_bucket",
-                "object": storage_object_name,
-            }
+            "source": {
+                "storageSource": {
+                    "bucket": "test_gcs_bucket",
+                    "object": storage_object_name,
+                }
+            },
         }
         self.assertDictEqual(
             kwargs,

@@ -41,13 +41,13 @@ def build_model(hp):
     )(x)
 
     for i in range(hp.Int("num_blocks", 1, 3)):
-        for j in range(hp.Int("num_conv_{}".format(str(i)), 1, 3)):
+        for j in range(hp.Int(f"num_conv_{str(i)}", 1, 3)):
             x = tf.keras.layers.Conv2D(
-                hp.Int("filter_{}_{}".format(str(i), str(j)), 16, 256, step=16),
+                hp.Int(f"filter_{str(i)}_{str(j)}", 16, 256, step=16),
                 (3, 3),
                 padding="same",
                 activation=hp.Choice(
-                    "conv_activation_{}_{}".format(str(i), str(j)),
+                    f"conv_activation_{str(i)}_{str(j)}",
                     values=["relu", "elu"],
                     default="relu",
                 ),

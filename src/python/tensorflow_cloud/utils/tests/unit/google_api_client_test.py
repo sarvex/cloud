@@ -60,7 +60,7 @@ class GoogleApiClientTest(tf.test.TestCase):
             self._job_id, self._project_id)
         self.assertTrue(status)
         self.mock_request.execute.assert_called_once()
-        job_name = "projects/{}/jobs/{}".format(self._project_id, self._job_id)
+        job_name = f"projects/{self._project_id}/jobs/{self._job_id}"
         self.mock_apiclient.projects().jobs().get.assert_called_with(
             name=job_name)
 
@@ -72,7 +72,7 @@ class GoogleApiClientTest(tf.test.TestCase):
             self._job_id, self._project_id)
         self.assertTrue(status)
         self.mock_request.execute.assert_called_once()
-        job_name = "projects/{}/jobs/{}".format(self._project_id, self._job_id)
+        job_name = f"projects/{self._project_id}/jobs/{self._job_id}"
         self.mock_apiclient.projects().jobs().get.assert_called_with(
             name=job_name)
 
@@ -113,7 +113,7 @@ class GoogleApiClientTest(tf.test.TestCase):
         succeeded_status = google_api_client.is_aip_training_job_running(
             self._job_id, self._project_id)
         self.assertFalse(succeeded_status)
-        job_name = "projects/{}/jobs/{}".format(self._project_id, self._job_id)
+        job_name = f"projects/{self._project_id}/jobs/{self._job_id}"
         self.mock_apiclient.projects().jobs().get.assert_called_with(
             name=job_name)
         cancelled_status = google_api_client.is_aip_training_job_running(
@@ -133,7 +133,7 @@ class GoogleApiClientTest(tf.test.TestCase):
         queued_status = google_api_client.is_aip_training_job_running(
             self._job_id, self._project_id)
         self.assertTrue(queued_status)
-        job_name = "projects/{}/jobs/{}".format(self._project_id, self._job_id)
+        job_name = f"projects/{self._project_id}/jobs/{self._job_id}"
         self.mock_apiclient.projects().jobs().get.assert_called_with(
             name=job_name)
         preparing_status = google_api_client.is_aip_training_job_running(
@@ -151,7 +151,7 @@ class GoogleApiClientTest(tf.test.TestCase):
         self.mock_request.execute.return_value = {}
         google_api_client.stop_aip_training_job(self._job_id, self._project_id)
 
-        job_name = "projects/{}/jobs/{}".format(self._project_id, self._job_id)
+        job_name = f"projects/{self._project_id}/jobs/{self._job_id}"
         self.mock_apiclient.projects().jobs().cancel.assert_called_with(
             name=job_name)
 
@@ -161,7 +161,7 @@ class GoogleApiClientTest(tf.test.TestCase):
         )
         google_api_client.stop_aip_training_job(self._job_id, self._project_id)
 
-        job_name = "projects/{}/jobs/{}".format(self._project_id, self._job_id)
+        job_name = f"projects/{self._project_id}/jobs/{self._job_id}"
         self.mock_apiclient.projects().jobs().cancel.assert_called_with(
             name=job_name)
 
@@ -169,7 +169,7 @@ class GoogleApiClientTest(tf.test.TestCase):
         self.mock_request.execute.side_effect = errors.HttpError(
             httplib2.Response(info={"status": 404}), b"")
 
-        job_name = "projects/{}/jobs/{}".format(self._project_id, self._job_id)
+        job_name = f"projects/{self._project_id}/jobs/{self._job_id}"
         with self.assertRaises(errors.HttpError):
             google_api_client.stop_aip_training_job(
                 self._job_id, self._project_id)
@@ -226,9 +226,7 @@ class GoogleApiClientTest(tf.test.TestCase):
             google_api_client.ClientEnvironment.DL_CONTAINER.name)
 
     def test_get_or_set_consent_status_rejected(self):
-        config_data = {}
-        config_data["telemetry_rejected"] = True
-
+        config_data = {"telemetry_rejected": True}
         # Create the config path if it does not already exist
         os.makedirs(os.path.dirname(self._local_config_path), exist_ok=True)
 
@@ -238,9 +236,7 @@ class GoogleApiClientTest(tf.test.TestCase):
         self.assertFalse(google_api_client.get_or_set_consent_status())
 
     def test_get_or_set_consent_status_verified(self):
-        config_data = {}
-        config_data["notification_version"] = version.__version__
-
+        config_data = {"notification_version": version.__version__}
         # Create the config path if it does not already exist
         os.makedirs(os.path.dirname(self._local_config_path), exist_ok=True)
 

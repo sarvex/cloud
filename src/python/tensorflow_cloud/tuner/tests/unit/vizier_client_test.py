@@ -30,12 +30,9 @@ class VizierClientTest(tf.test.TestCase):
         self._study_id = "study-a"
         self._region = "us-central1"
         self._project_id = "project-a"
-        self._trial_parent = "projects/{}/locations/{}/studies/{}".format(
-            self._project_id, self._region, self._study_id
-        )
-        self._trial_name = "{}/trials/{}".format(self._trial_parent, "1")
-        self._parent = "projects/{}/locations/{}".format(self._project_id,
-                                                         self._region)
+        self._trial_parent = f"projects/{self._project_id}/locations/{self._region}/studies/{self._study_id}"
+        self._trial_name = f"{self._trial_parent}/trials/1"
+        self._parent = f"projects/{self._project_id}/locations/{self._region}"
 
         self._mock_discovery = mock.MagicMock()
 
@@ -84,8 +81,7 @@ class VizierClientTest(tf.test.TestCase):
 
         mock_create_study.assert_called_with(
             body={"study_config": self._study_config},
-            parent="projects/{}/locations/{}".format(
-                self._project_id, self._region),
+            parent=f"projects/{self._project_id}/locations/{self._region}",
             studyId=self._study_id,
         )
 
@@ -113,9 +109,7 @@ class VizierClientTest(tf.test.TestCase):
         )
 
         mock_get_study.assert_called_with(
-            name="projects/{}/locations/{}/studies/{}".format(
-                self._project_id, self._region, self._study_id
-            )
+            name=f"projects/{self._project_id}/locations/{self._region}/studies/{self._study_id}"
         )
 
     @mock.patch.object(vizier_client, "discovery")
@@ -130,10 +124,7 @@ class VizierClientTest(tf.test.TestCase):
         mock_discovery.build_from_document.return_value.projects().locations(
             ).studies().get = mock_get_study
 
-        with self.assertRaisesRegex(
-            ValueError,
-            "GetStudy failed. Study not found: {}.".format(self._study_id),
-        ):
+        with self.assertRaisesRegex(ValueError, f"GetStudy failed. Study not found: {self._study_id}."):
             vizier_client.create_or_load_study(
                 project_id=self._project_id,
                 region=self._region,
@@ -141,9 +132,7 @@ class VizierClientTest(tf.test.TestCase):
             )
 
         mock_get_study.assert_called_with(
-            name="projects/{}/locations/{}/studies/{}".format(
-                self._project_id, self._region, self._study_id
-            )
+            name=f"projects/{self._project_id}/locations/{self._region}/studies/{self._study_id}"
         )
 
     @mock.patch.object(vizier_client, "discovery")
@@ -177,9 +166,7 @@ class VizierClientTest(tf.test.TestCase):
                 study_config=self._study_config,
             )
         mock_get_study.assert_called_with(
-            name="projects/{}/locations/{}/studies/{}".format(
-                self._project_id, self._region, self._study_id
-            )
+            name=f"projects/{self._project_id}/locations/{self._region}/studies/{self._study_id}"
         )
 
     @mock.patch.object(vizier_client, "discovery")
@@ -214,9 +201,7 @@ class VizierClientTest(tf.test.TestCase):
 
         self.assertIsInstance(client, vizier_client._VizierClient)
         mock_get_study.assert_called_with(
-            name="projects/{}/locations/{}/studies/{}".format(
-                self._project_id, self._region, self._study_id
-            )
+            name=f"projects/{self._project_id}/locations/{self._region}/studies/{self._study_id}"
         )
 
     def test_get_suggestions(self):
@@ -483,7 +468,7 @@ class VizierClientTest(tf.test.TestCase):
         self._mock_discovery.projects().locations().studies(
         ).delete = mock_delete_study
 
-        study_name = "{}1".format(self._trial_parent)
+        study_name = f"{self._trial_parent}1"
         self._client.delete_study(study_name)
 
         mock_delete_study.assert_called_once_with(name=study_name)
@@ -498,10 +483,7 @@ class VizierClientTest(tf.test.TestCase):
         self._mock_discovery.projects().locations().studies(
         ).delete = mock_delete_study
 
-        with self.assertRaisesRegex(
-            ValueError,
-            "DeleteStudy failed. Study not found: {}."
-            .format(self._trial_parent)):
+        with self.assertRaisesRegex(ValueError, f"DeleteStudy failed. Study not found: {self._trial_parent}."):
             self._client.delete_study()
 
 

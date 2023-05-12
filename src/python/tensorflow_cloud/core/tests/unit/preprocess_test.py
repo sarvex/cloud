@@ -72,7 +72,7 @@ class TestPreprocess(absltest.TestCase):
             '    os.environ["KERASTUNER_TUNER_ID"]=flag\n',
             "strategy = tf.distribute.OneDeviceStrategy(device='/gpu:0')\n",
             "tf.distribute.experimental_set_strategy(strategy)\n",
-            'exec(open("{}").read())\n'.format(self.entry_point_name),
+            f'exec(open("{self.entry_point_name}").read())\n',
         ]
         self.assert_and_cleanup(expected_lines, script_lines)
 
@@ -93,7 +93,7 @@ class TestPreprocess(absltest.TestCase):
             '    os.environ["KERASTUNER_TUNER_ID"]=flag\n',
             "strategy = tf.distribute.MirroredStrategy()\n",
             "tf.distribute.experimental_set_strategy(strategy)\n",
-            'exec(open("{}").read())\n'.format(self.entry_point_name),
+            f'exec(open("{self.entry_point_name}").read())\n',
         ]
         self.assert_and_cleanup(expected_lines, script_lines)
 
@@ -110,10 +110,10 @@ class TestPreprocess(absltest.TestCase):
             "for flag in sys.argv[1:]:\n",
             '  if flag.startswith("TUNER_ID"):\n',
             '    os.environ["KERASTUNER_TUNER_ID"]=flag\n',
-            ("strategy = tf.distribute.experimental."
-             "MultiWorkerMirroredStrategy()\n"),
+            "strategy = tf.distribute.experimental."
+            "MultiWorkerMirroredStrategy()\n",
             "tf.distribute.experimental_set_strategy(strategy)\n",
-            'exec(open("{}").read())\n'.format(self.entry_point_name),
+            f'exec(open("{self.entry_point_name}").read())\n',
         ]
         self.assert_and_cleanup(expected_lines, script_lines)
 
@@ -139,8 +139,8 @@ class TestPreprocess(absltest.TestCase):
             "def wait_for_tpu_cluster_resolver_ready():\n",
             "  tpu_config_env = os.environ.get('TPU_CONFIG')\n",
             "  if not tpu_config_env:\n",
-            ("    logging.info('Missing TPU_CONFIG, "
-             "use CPU/GPU for training.')\n"),
+            "    logging.info('Missing TPU_CONFIG, "
+            "use CPU/GPU for training.')\n",
             "    return None\n",
             "  tpu_node = json.loads(tpu_config_env)\n",
             "  logging.info('Waiting for TPU to be ready: %s.', tpu_node)\n",
@@ -156,8 +156,8 @@ class TestPreprocess(absltest.TestCase):
             "      tpu_cluster_resolver_dict = "
             "tpu_cluster_resolver.cluster_spec().as_dict()\n",
             "      if 'worker' in tpu_cluster_resolver_dict:\n",
-            ("        logging.info('Found TPU worker: %s', "
-             "tpu_cluster_resolver_dict)\n"),
+            "        logging.info('Found TPU worker: %s', "
+            "tpu_cluster_resolver_dict)\n",
             "        return tpu_cluster_resolver\n",
             "    except Exception as e:\n",
             "      if i < num_retries - 1:\n",
@@ -165,8 +165,8 @@ class TestPreprocess(absltest.TestCase):
             " instance.')\n",
             "      else:\n",
             "        # Preserves the traceback.\n",
-            ("        raise RuntimeError('Failed to schedule TPU: "
-             "{}'.format(e))\n"),
+            "        raise RuntimeError('Failed to schedule TPU: "
+            "{}'.format(e))\n",
             "    time.sleep(10)\n",
             "  raise RuntimeError('Failed to schedule TPU.')\n",
             "resolver = wait_for_tpu_cluster_resolver_ready()\n",
@@ -174,7 +174,7 @@ class TestPreprocess(absltest.TestCase):
             "tf.tpu.experimental.initialize_tpu_system(resolver)\n",
             "strategy = tf.distribute.experimental.TPUStrategy(resolver)\n",
             "tf.distribute.experimental_set_strategy(strategy)\n",
-            'exec(open("{}").read())\n'.format(self.entry_point_name),
+            f'exec(open("{self.entry_point_name}").read())\n',
         ]
         self.assert_and_cleanup(expected_lines, script_lines)
 

@@ -94,27 +94,23 @@ def _validate_files(entry_point, requirements_txt):
     if entry_point is not None and (
         not os.path.isfile(os.path.join(cwd, entry_point))):
         raise ValueError(
-            "Invalid `entry_point`. "
-            "Expected a relative path in the current directory tree. "
-            "Received: {}".format(entry_point)
+            f"Invalid `entry_point`. Expected a relative path in the current directory tree. Received: {entry_point}"
         )
 
     if requirements_txt is not None and (
         not os.path.isfile(os.path.join(cwd, requirements_txt))
     ):
         raise ValueError(
-            "Invalid `requirements_txt`. "
-            "Expected a relative path in the current directory tree. "
-            "Received: {}".format(requirements_txt)
+            f"Invalid `requirements_txt`. Expected a relative path in the current directory tree. Received: {requirements_txt}"
         )
 
-    if entry_point is not None and (
-        not (entry_point.endswith("py") or entry_point.endswith("ipynb"))
+    if (
+        entry_point is not None
+        and not entry_point.endswith("py")
+        and not entry_point.endswith("ipynb")
     ):
         raise ValueError(
-            "Invalid `entry_point`. "
-            "Expected a python file or an iPython notebook. "
-            "Received: {}".format(entry_point)
+            f"Invalid `entry_point`. Expected a python file or an iPython notebook. Received: {entry_point}"
         )
 
 
@@ -122,9 +118,7 @@ def _validate_distribution_strategy(distribution_strategy):
     """Validates distribution strategy param."""
     if distribution_strategy not in ["auto", None]:
         raise ValueError(
-            "Invalid `distribution_strategy` input. "
-            'Expected "auto" or None. '
-            "Received {}.".format(distribution_strategy)
+            f'Invalid `distribution_strategy` input. Expected "auto" or None. Received {distribution_strategy}.'
         )
 
 
@@ -134,40 +128,29 @@ def _validate_cluster_config(
     """Validates cluster config params."""
     if not isinstance(chief_config, machine_config.MachineConfig):
         raise ValueError(
-            "Invalid `chief_config` input. "
-            'Expected "auto" or `MachineConfig` instance. '
-            "Received {}.".format(chief_config)
+            f'Invalid `chief_config` input. Expected "auto" or `MachineConfig` instance. Received {chief_config}.'
         )
 
     if worker_count < 0:
         raise ValueError(
-            "Invalid `worker_count` input. "
-            "Expected a postive integer value. "
-            "Received {}.".format(worker_count)
+            f"Invalid `worker_count` input. Expected a postive integer value. Received {worker_count}."
         )
 
     if (worker_count > 0 and
         not isinstance(worker_config, machine_config.MachineConfig)):
         raise ValueError(
-            "Invalid `worker_config` input. "
-            'Expected "auto" or `MachineConfig` instance. '
-            "Received {}.".format(worker_config)
+            f'Invalid `worker_config` input. Expected "auto" or `MachineConfig` instance. Received {worker_config}.'
         )
 
     if machine_config.is_tpu_config(chief_config):
         raise ValueError(
-            "Invalid `chief_config` input. "
-            "`chief_config` cannot be a TPU config. "
-            "Received {}.".format(chief_config)
+            f"Invalid `chief_config` input. `chief_config` cannot be a TPU config. Received {chief_config}."
         )
 
-    if machine_config.is_tpu_config(worker_config):
-        if worker_count != 1:
-            raise ValueError(
-                "Invalid `worker_count` input. "
-                "Expected worker_count=1 for TPU `worker_config`. "
-                "Received {}.".format(worker_count)
-            )
+    if machine_config.is_tpu_config(worker_config) and worker_count != 1:
+        raise ValueError(
+            f"Invalid `worker_count` input. Expected worker_count=1 for TPU `worker_config`. Received {worker_count}."
+        )
 
 
 def _validate_job_labels(job_labels):
@@ -187,25 +170,15 @@ def _validate_other_args(
 
     if args is not None and not isinstance(args, list):
         raise ValueError(
-            "Invalid `entry_point_args` input. "
-            "Expected None or a list. "
-            "Received {}.".format(str(args))
+            f"Invalid `entry_point_args` input. Expected None or a list. Received {str(args)}."
         )
 
     if not isinstance(stream_logs, bool):
         raise ValueError(
-            "Invalid `stream_logs` input. "
-            "Expected a boolean. "
-            "Received {}.".format(str(stream_logs))
+            f"Invalid `stream_logs` input. Expected a boolean. Received {str(stream_logs)}."
         )
 
     if called_from_notebook and docker_image_build_bucket is None:
         raise ValueError(
-            "Invalid `docker_config.image_build_bucket` input. "
-            "When `run` API is used within a python notebook, "
-            "`docker_config.image_build_bucket` is expected to be specifed. We "
-            "will use the bucket name in Google Cloud Storage/Build services "
-            "for Docker containerization. Received {}.".format(
-                str(docker_image_build_bucket)
-            )
+            f"Invalid `docker_config.image_build_bucket` input. When `run` API is used within a python notebook, `docker_config.image_build_bucket` is expected to be specifed. We will use the bucket name in Google Cloud Storage/Build services for Docker containerization. Received {str(docker_image_build_bucket)}."
         )

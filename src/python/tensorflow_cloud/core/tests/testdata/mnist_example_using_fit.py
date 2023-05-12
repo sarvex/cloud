@@ -79,7 +79,7 @@ model.compile(
 def decay(epoch):
     if epoch < 3:
         return 1e-3
-    elif epoch >= 3 and epoch < 7:
+    elif epoch < 7:
         return 1e-4
     else:
         return 1e-5
@@ -90,11 +90,7 @@ class PrintLR(tf.keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         """Implements on_epoch_end() callback."""
-        print(
-            "\nLearning rate for epoch {} is {}".format(
-                epoch + 1, model.optimizer.lr.numpy()
-            )
-        )
+        print(f"\nLearning rate for epoch {epoch + 1} is {model.optimizer.lr.numpy()}")
 
 
 callbacks = [tf.keras.callbacks.LearningRateScheduler(decay), PrintLR()]

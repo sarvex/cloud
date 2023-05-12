@@ -52,10 +52,7 @@ _NUM_PARALLEL_TRIALS = 4
 def _load_data(dir_path=None):
     """Loads and prepares data."""
 
-    mnist_file_path = None
-    if dir_path:
-        mnist_file_path = os.path.join(dir_path, "mnist.npz")
-
+    mnist_file_path = os.path.join(dir_path, "mnist.npz") if dir_path else None
     (x, y), (val_x, val_y) = keras.datasets.mnist.load_data(mnist_file_path)
     x = x.astype("float32") / 255.0
     val_x = val_x.astype("float32") / 255.0
@@ -160,7 +157,7 @@ class CloudTunerIntegrationTest(_CloudTunerIntegrationTestBase):
 
     def testCloudTunerHyperparameters(self):
         """Test case to configure Tuner with HyperParameters object."""
-        study_id = "{}_hyperparameters".format(_STUDY_ID_BASE)
+        study_id = f"{_STUDY_ID_BASE}_hyperparameters"
         self._study_id = study_id
 
         tuner = CloudTuner(
@@ -209,7 +206,7 @@ class CloudTunerIntegrationTest(_CloudTunerIntegrationTestBase):
             .prefetch(1000)
         )
 
-        study_id = "{}_dataset".format(_STUDY_ID_BASE)
+        study_id = f"{_STUDY_ID_BASE}_dataset"
         self._study_id = study_id
 
         tuner = CloudTuner(
@@ -268,7 +265,7 @@ class CloudTunerIntegrationTest(_CloudTunerIntegrationTestBase):
             },
         }
 
-        study_id = "{}_study_config".format(_STUDY_ID_BASE)
+        study_id = f"{_STUDY_ID_BASE}_study_config"
         self._study_id = study_id
 
         tuner = CloudTuner(
@@ -303,14 +300,14 @@ class CloudTunerInDistributedIntegrationTest(_CloudTunerIntegrationTestBase):
 
     def testCloudTunerInProcessDistributedTuning(self):
         """Test case to simulate multiple parallel tuning workers."""
-        study_id = "{}_dist".format(_STUDY_ID_BASE)
+        study_id = f"{_STUDY_ID_BASE}_dist"
         self._study_id = study_id
 
         with multiprocessing.Pool(processes=_NUM_PARALLEL_TRIALS) as pool:
             results = pool.map(
                 _dist_search_fn_wrapper,
                 [
-                    (self.get_temp_dir(), study_id, "tuner{}".format(i))
+                    (self.get_temp_dir(), study_id, f"tuner{i}")
                     for i in range(_NUM_PARALLEL_TRIALS)
                 ],
             )
@@ -320,7 +317,7 @@ class CloudTunerInDistributedIntegrationTest(_CloudTunerIntegrationTestBase):
     def testCloudTunerAIPlatformTrainingDistributedTuning(self):
         """Test case of parallel tuning using CAIP Training as flock manager."""
         # TODO(b/169697464): Implement test for tuning with CAIP Training
-        study_id = "{}_caip_dist".format(_STUDY_ID_BASE)
+        study_id = f"{_STUDY_ID_BASE}_caip_dist"
         del study_id
 
 

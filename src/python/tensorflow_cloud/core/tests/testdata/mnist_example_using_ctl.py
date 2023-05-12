@@ -13,6 +13,7 @@
 # limitations under the License.
 """Test module that instantiates custom training loop."""
 
+
 # From TF tutorials
 # https://www.tensorflow.org/tutorials/distribute/custom_training
 
@@ -46,7 +47,7 @@ test_images = test_images / np.float32(255)
 
 # Create strategy
 strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
-print("Number of devices: {}".format(strategy.num_replicas_in_sync))
+print(f"Number of devices: {strategy.num_replicas_in_sync}")
 
 
 # Setup input pipeline
@@ -71,7 +72,7 @@ test_dist_dataset = strategy.experimental_distribute_dataset(test_dataset)
 
 def create_model():
     """Constructs a model."""
-    model_ = tf.keras.Sequential(
+    return tf.keras.Sequential(
         [
             tf.keras.layers.Conv2D(32, 3, activation="relu"),
             tf.keras.layers.MaxPooling2D(),
@@ -82,8 +83,6 @@ def create_model():
             tf.keras.layers.Dense(10, activation="softmax"),
         ]
     )
-
-    return model_
 
 
 # Define loss function

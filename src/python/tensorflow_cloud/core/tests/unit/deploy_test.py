@@ -137,7 +137,7 @@ class TestDeploy(absltest.TestCase):
         self.assertDictEqual(
             kwargs,
             {
-                "parent": "projects/" + self.mock_project_name,
+                "parent": f"projects/{self.mock_project_name}",
                 "body": self.expected_request_dict,
             },
         )
@@ -145,16 +145,7 @@ class TestDeploy(absltest.TestCase):
         # Verify print statement
         self.assertEqual(
             mock_stdout.getvalue(),
-            "\nJob submitted successfully."
-            "\nYour job ID is:  {}\n"
-            "\nPlease access your training job information here:\nhttps://"
-            "console.cloud.google.com/mlengine/jobs/{}?project={}\n"
-            "\nPlease access your training job logs here: "
-            "https://console.cloud.google.com/logs/viewer?resource=ml_job%2F"
-            "job_id%2F{}&interval=NO_LIMIT&project={}\n\n".format(
-                self.mock_job_id, self.mock_job_id, self.mock_project_name,
-                self.mock_job_id, self.mock_project_name
-            ),
+            f"\nJob submitted successfully.\nYour job ID is:  {self.mock_job_id}\n\nPlease access your training job information here:\nhttps://console.cloud.google.com/mlengine/jobs/{self.mock_job_id}?project={self.mock_project_name}\n\nPlease access your training job logs here: https://console.cloud.google.com/logs/viewer?resource=ml_job%2Fjob_id%2F{self.mock_job_id}&interval=NO_LIMIT&project={self.mock_project_name}\n\n",
         )
 
     def test_deploy_job_with_default_service_account_has_no_serviceaccount_key(
@@ -181,7 +172,7 @@ class TestDeploy(absltest.TestCase):
         self.assertDictEqual(
             kwargs,
             {
-                "parent": "projects/" + self.mock_project_name,
+                "parent": f"projects/{self.mock_project_name}",
                 "body": self.expected_request_dict,
             },
         )
@@ -212,7 +203,7 @@ class TestDeploy(absltest.TestCase):
         self.assertDictEqual(
             kwargs,
             {
-                "parent": "projects/" + self.mock_project_name,
+                "parent": f"projects/{self.mock_project_name}",
                 "body": self.expected_request_dict,
             },
         )
@@ -238,7 +229,7 @@ class TestDeploy(absltest.TestCase):
         self.assertDictEqual(
             kwargs,
             {
-                "parent": "projects/" + self.mock_project_name,
+                "parent": f"projects/{self.mock_project_name}",
                 "body": self.expected_request_dict,
             },
         )
@@ -286,7 +277,7 @@ class TestDeploy(absltest.TestCase):
         self.assertDictEqual(
             kwargs,
             {
-                "parent": "projects/" + self.mock_project_name,
+                "parent": f"projects/{self.mock_project_name}",
                 "body": self.expected_request_dict,
             },
         )

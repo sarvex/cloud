@@ -42,8 +42,8 @@ def generate_image_uri():
     """Returns unique name+tag for a Docker image."""
     # Keeping this name format uniform with the job id.
     unique_tag = str(uuid.uuid4()).replace("-", "_")
-    docker_registry = "gcr.io/{}".format(gcp.get_project_name())
-    return "{}/{}:{}".format(docker_registry, "tf_cloud_train", unique_tag)
+    docker_registry = f"gcr.io/{gcp.get_project_name()}"
+    return f"{docker_registry}/tf_cloud_train:{unique_tag}"
 
 
 class ContainerBuilder(object):
@@ -158,7 +158,7 @@ class ContainerBuilder(object):
             tf_version = tf_version.replace("-rc", "rc")
             # Get the TF Docker parent image to use based on the current
             # TF version.
-            img = "tensorflow/tensorflow:{}".format(tf_version)
+            img = f"tensorflow/tensorflow:{tf_version}"
             if (self.chief_config.accelerator_type !=
                 machine_config.AcceleratorType.NO_ACCELERATOR):
                 img += "-gpu"
@@ -166,7 +166,7 @@ class ContainerBuilder(object):
             # Add python 3 tag for TF version <= 2.1.0
             # https://hub.docker.com/r/tensorflow/tensorflow
             v = tf_version.split(".")
-            if float(v[0] + "." + v[1]) <= 2.1:
+            if float(f"{v[0]}.{v[1]}") <= 2.1:
                 img += "-py3"
 
         # Use the latest TF docker image if a local installation is not
@@ -174,19 +174,8 @@ class ContainerBuilder(object):
         # does not exist.
         if not (img and self._image_exists(img)):
             warnings.warn(
-                "TF Cloud `run` API uses docker, with a TF parent image "
-                "matching your local TF version, for containerizing your "
-                "code. A TF Docker image does not exist for the TF version "
-                "you are using: {}"
-                "We are replacing this with the latest stable TF Docker "
-                "image available: `tensorflow/tensorflow:latest`"
-                "Please see "
-                "https://hub.docker.com/r/tensorflow/tensorflow/ "
-                "for details on the available Docker images."
-                "If you are seeing any code compatibility issues because of"
-                " the TF version change, please try using a custom "
-                "`docker_config.parent_image` with the required "
-                "TF version.".format(tf_version))
+                f"TF Cloud `run` API uses docker, with a TF parent image matching your local TF version, for containerizing your code. A TF Docker image does not exist for the TF version you are using: {tf_version}We are replacing this with the latest stable TF Docker image available: `tensorflow/tensorflow:latest`Please see https://hub.docker.com/r/tensorflow/tensorflow/ for details on the available Docker images.If you are seeing any code compatibility issues because of the TF version change, please try using a custom `docker_config.parent_image` with the required TF version."
+            )
             new_img = "tensorflow/tensorflow:latest"
             if img and img.endswith("-gpu"):
                 new_img += "-gpu"
@@ -195,17 +184,11 @@ class ContainerBuilder(object):
 
     def _create_docker_file(self):
         """Creates a Dockerfile."""
-        if self.docker_config:
-          parent_image = self.docker_config.parent_image
-        else:
-          parent_image = None
+        parent_image = self.docker_config.parent_image if self.docker_config else None
         if parent_image is None:
             parent_image = self._get_docker_base_image()
 
-        lines = [
-            "FROM {}".format(parent_image),
-            "WORKDIR {}".format(self.destination_dir),
-        ]
+        lines = [f"FROM {parent_image}", f"WORKDIR {self.destination_dir}"]
 
         if self.requirements_txt is not None:
             _, requirements_txt_name = os.path.split(self.requirements_txt)
@@ -233,17 +216,14 @@ class ContainerBuilder(object):
 
         # Copies the files from the `destination_dir` in Docker daemon location
         # to the `destination_dir` in Docker container filesystem.
-        lines.append("COPY {} {}".format(self.destination_dir,
-                                         self.destination_dir))
+        lines.append(f"COPY {self.destination_dir} {self.destination_dir}")
 
         docker_entry_point = self.preprocessed_entry_point or self.entry_point
         _, docker_entry_point_file_name = os.path.split(docker_entry_point)
 
         # Using `ENTRYPOINT` here instead of `CMD` specifically because
         # we want to support passing user code flags.
-        lines.extend(
-            ['ENTRYPOINT ["python", "{}"]'.format(docker_entry_point_file_name)]
-        )
+        lines.extend([f'ENTRYPOINT ["python", "{docker_entry_point_file_name}"]'])
 
         content = "\n".join(lines)
         self.docker_file_descriptor, self.docker_file_path = tempfile.mkstemp()
@@ -261,9 +241,7 @@ class ContainerBuilder(object):
         """
         repo_name, tag_name = image.split(":")
         r = requests.get(
-            "http://hub.docker.com/v2/repositories/{}/tags/{}".format(
-                repo_name, tag_name
-            )
+            f"http://hub.docker.com/v2/repositories/{repo_name}/tags/{tag_name}"
         )
         return r.ok
 
@@ -346,10 +324,7 @@ class LocalContainerBuilder(ContainerBuilder):
             Image URI.
         """
         # Use the given Docker image given, if available.
-        if self.docker_config:
-            image_uri = self.docker_config.image
-        else:
-            image_uri = None
+        image_uri = self.docker_config.image if self.docker_config else None
         image_uri = image_uri or generate_image_uri()
         logger.info("Building Docker image: %s", image_uri)
 
@@ -399,9 +374,7 @@ class LocalContainerBuilder(ContainerBuilder):
 
             if "error" in chunk:
                 raise RuntimeError(
-                    "Docker image {} failed: {}\nImage URI: {}".format(
-                        name, str(chunk["error"]), image_uri
-                    )
+                    f'Docker image {name} failed: {str(chunk["error"])}\nImage URI: {image_uri}'
                 )
 
 
@@ -424,10 +397,7 @@ class CloudContainerBuilder(ContainerBuilder):
         self._get_tar_file_path()
         storage_object_name = self._upload_tar_to_gcs()
         # Use the given Docker image name, if available.
-        if self.docker_config:
-            image_uri = self.docker_config.image
-        else:
-            image_uri = None
+        image_uri = self.docker_config.image if self.docker_config else None
         image_uri = image_uri or generate_image_uri()
 
         logger.info(
@@ -477,7 +447,7 @@ class CloudContainerBuilder(ContainerBuilder):
                 # `get` response is a `Build` object which contains `Status`.
                 # https://cloud.google.com/cloud-build/docs/api/reference/rest/v1/projects.builds#Build.Status    # pylint: disable=line-too-long
                 status = get_response["status"]
-                if status != "WORKING" and status != "QUEUED":
+                if status not in ["WORKING", "QUEUED"]:
                     break
 
                 attempts += 1
@@ -507,7 +477,7 @@ class CloudContainerBuilder(ContainerBuilder):
                 self.docker_config.image_build_bucket)
 
         unique_tag = str(uuid.uuid4()).replace("-", "_")
-        storage_object_name = "tf_cloud_train_tar_{}".format(unique_tag)
+        storage_object_name = f"tf_cloud_train_tar_{unique_tag}"
 
         blob = bucket.blob(storage_object_name)
         blob.upload_from_filename(self.tar_file_path)
@@ -529,11 +499,12 @@ class CloudContainerBuilder(ContainerBuilder):
         Returns:
             Build request dictionary.
         """
-        request_dict = {}
-        request_dict["projectId"] = self.project_id
-        request_dict["images"] = [[image_uri]]
-        request_dict["steps"] = []
-        request_dict["timeout"] = "{}s".format(timeout_sec)
+        request_dict = {
+            "projectId": self.project_id,
+            "images": [[image_uri]],
+            "steps": [],
+            "timeout": f"{timeout_sec}s",
+        }
         build_args = ["build", "-t", image_uri, "."]
 
         if self.docker_config:
@@ -542,14 +513,13 @@ class CloudContainerBuilder(ContainerBuilder):
 
         if cache_from:
             # Use the given Docker image as cache.
-            request_dict["steps"].append({
-                "name": "gcr.io/cloud-builders/docker",
-                "entrypoint": "bash",
-                "args": [
-                    "-c",
-                    "docker pull {} || exit 0".format(cache_from),
-                ],
-            })
+            request_dict["steps"].append(
+                {
+                    "name": "gcr.io/cloud-builders/docker",
+                    "entrypoint": "bash",
+                    "args": ["-c", f"docker pull {cache_from} || exit 0"],
+                }
+            )
             build_args[3:3] = ["--cache-from", cache_from]
 
         request_dict["steps"].append({

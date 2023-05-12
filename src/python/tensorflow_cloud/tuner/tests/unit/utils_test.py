@@ -374,7 +374,7 @@ class CloudTunerUtilsTest(tf.test.TestCase, parameterized.TestCase):
         }
         hparams_repr_list = [repr(hparams[x]) for x in hparams.keys()]
         expected_hparams_repr_list = [
-            repr(expected_hparams[x]) for x in expected_hparams.keys()
+            repr(expected_hparams[x]) for x in expected_hparams
         ]
         self.assertCountEqual(hparams_repr_list, expected_hparams_repr_list)
 

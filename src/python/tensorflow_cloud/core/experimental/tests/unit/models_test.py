@@ -184,7 +184,7 @@ class ModelsTest(absltest.TestCase):
         self.setup_run(remote=False)
         file_id = 'test_id'
         self.setup_run_experiment_cloud(file_id)
-        run_experiment_kwargs = dict()
+        run_experiment_kwargs = {}
         models.run_experiment_cloud(
             run_experiment_kwargs=run_experiment_kwargs)
         entry_point = models._ENTRY_POINT_FORMAT.format(file_id)
@@ -240,7 +240,7 @@ class ModelsTest(absltest.TestCase):
         self.assertEqual('mirror', strategy)
 
     def test_get_distribution_strategy_one_device(self):
-        run_kwargs = dict()
+        run_kwargs = {}
         strategy = models.get_distribution_strategy_str(run_kwargs)
         self.assertEqual('one_device', strategy)
 

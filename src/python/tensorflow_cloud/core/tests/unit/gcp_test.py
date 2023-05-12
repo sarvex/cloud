@@ -180,10 +180,7 @@ class TestGcp(absltest.TestCase):
 
         with self.assertRaisesRegex(ValueError, r"Invalid job labels"):
             # label cannot be too many
-            gcp.validate_job_labels(
-                job_labels={"key{}".format(i):
-                            "val{}".format(i) for i in range(65)}
-            )
+            gcp.validate_job_labels(job_labels={f"key{i}": f"val{i}" for i in range(65)})
 
     def testValidateServiceAccount_NotEndWithCorrectDomain_RaisesValueError(
         self):

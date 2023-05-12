@@ -89,7 +89,7 @@ def get_model():
 print("Initial training + saving model weights")
 model = get_model()
 train_dataset, eval_dataset = get_data()
-checkpoint_path = "{}/cp.ckpt".format(model_save_path)
+checkpoint_path = f"{model_save_path}/cp.ckpt"
 cp_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_path, save_weights_only=True, verbose=1
 )

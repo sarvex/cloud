@@ -263,10 +263,9 @@ def run_experiment_cloud(run_experiment_kwargs: Dict[str, Any],
             2. 'docker_image': Docker image generated for the training job.
     """
     if run_kwargs is None:
-        run_kwargs = dict()
+        run_kwargs = {}
     distribution_strategy = get_distribution_strategy_str(run_kwargs)
-    run_experiment_kwargs.update(
-        dict(distribution_strategy=distribution_strategy))
+    run_experiment_kwargs |= dict(distribution_strategy=distribution_strategy)
     file_id = str(uuid.uuid4())
     params_file = save_params(run_experiment_kwargs, file_id)
     entry_point = copy_entry_point(file_id, params_file)

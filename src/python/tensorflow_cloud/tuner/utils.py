@@ -61,17 +61,13 @@ def make_study_config(
     Returns:
         A dict that holds the study configuration.
     """
-    study_config = {}
-    # The default algorithm used by the Vizier.
-    study_config["algorithm"] = "ALGORITHM_UNSPECIFIED"
-    # If no implementation_config is set, automated early stopping will not be
-    # run.
-    study_config["automatedStoppingConfig"] = {
-        "decayCurveStoppingConfig": {"useElapsedTime": True}
+    study_config = {
+        "algorithm": "ALGORITHM_UNSPECIFIED",
+        "automatedStoppingConfig": {
+            "decayCurveStoppingConfig": {"useElapsedTime": True}
+        },
+        "metrics": [],
     }
-
-    # Converts oracle_module.Objective to metrics.
-    study_config["metrics"] = []
     for obj in format_objective(objective):
         study_config["metrics"].append(
             {"metric": obj.name, "goal": format_goal(obj.direction)}
@@ -88,8 +84,7 @@ def convert_study_config_to_objective(
     study_config: Dict[Text, Any]) -> List[oracle_module.Objective]:
     """Converts Vizier study_config to a list of oracle_module.Objective."""
     if not study_config.get("metrics"):
-        raise ValueError('"metrics" not found in study_config {}'.format(
-            study_config))
+        raise ValueError(f'"metrics" not found in study_config {study_config}')
     if not isinstance(study_config["metrics"], list):
         raise ValueError(
             'study_config["metrics"] should be a list of {"metric": ...}')
@@ -119,20 +114,12 @@ def convert_study_config_to_hps(
         name = param["parameter"]
         if param["type"] == _DISCRETE:
             values = param["discrete_value_spec"]["values"]
-            is_numeric = True
-            for v in values:
-                if not isinstance(v, (int, float)):
-                    is_numeric = False
+            is_numeric = all(isinstance(v, (int, float)) for v in values)
             if (
                 is_numeric and len(values) > 2 and
                 np.all(np.diff(values, 2) == 0)
             ):
-                # If the numeric sequence is an arithmetic sequence, use
-                # Int/Float with step
-                is_int = True
-                for v in values:
-                    if not isinstance(v, int):
-                        is_int = False
+                is_int = all(isinstance(v, int) for v in values)
                 hps_type = hps.Int if is_int else hps.Float
 
                 if (
@@ -192,8 +179,7 @@ def convert_study_config_to_hps(
                     max_value=param["integer_value_spec"]["max_value"],
                 )
         else:
-            raise ValueError(
-                "Unknown parameter type: {}.".format(param["type"]))
+            raise ValueError(f'Unknown parameter type: {param["type"]}.')
     return hps
 
 
@@ -202,58 +188,45 @@ def _is_parameter_valid(param: Dict[Text, Any]):
     if not param.get("parameter"):
         raise ValueError('"parameter" (name) is not specified.')
     if not param.get("type"):
-        raise ValueError("Parameter {} type is not specified.".format(param))
+        raise ValueError(f"Parameter {param} type is not specified.")
     if param["type"] == _DISCRETE:
         if not param.get("discrete_value_spec"):
-            raise ValueError(
-                "Parameter {} is missing discrete_value_spec.".format(param)
-            )
+            raise ValueError(f"Parameter {param} is missing discrete_value_spec.")
         if not isinstance(param["discrete_value_spec"].get("values"), list):
             raise ValueError(
-                'Parameter spec {} is missing "values".'.format(
-                    param["discrete_value_spec"]
-                )
+                f'Parameter spec {param["discrete_value_spec"]} is missing "values".'
             )
     elif param["type"] == _CATEGORICAL:
         if not param.get("categorical_value_spec"):
-            raise ValueError(
-                "Parameter {} is missing categorical_value_spec.".format(param)
-            )
+            raise ValueError(f"Parameter {param} is missing categorical_value_spec.")
         if not isinstance(param["categorical_value_spec"].get("values"), list):
             raise ValueError(
-                'Parameter spec {} is missing "values".'.format(
-                    param["categorical_value_spec"]
-                )
+                f'Parameter spec {param["categorical_value_spec"]} is missing "values".'
             )
     elif param["type"] == _DOUBLE:
         if not param.get("double_value_spec"):
-            raise ValueError(
-                "Parameter {} is missing double_value_spec.".format(param))
+            raise ValueError(f"Parameter {param} is missing double_value_spec.")
         spec = param["double_value_spec"]
         if not (
             isinstance(spec.get("min_value"), float)
             and isinstance(spec.get("max_value"), float)
         ):
             raise ValueError(
-                'Parameter spec {} requires both "min_value" and '
-                '"max_value".'.format(spec)
+                f'Parameter spec {spec} requires both "min_value" and "max_value".'
             )
     elif param["type"] == _INTEGER:
         if not param.get("integer_value_spec"):
-            raise ValueError(
-                "Parameter {} is missing integer_value_spec.".format(param)
-            )
+            raise ValueError(f"Parameter {param} is missing integer_value_spec.")
         spec = param["integer_value_spec"]
         if not (
             isinstance(spec.get("min_value"), int)
             and isinstance(spec.get("max_value"), int)
         ):
             raise ValueError(
-                'Parameter spec {} requires both "min_value" and '
-                '"max_value".'.format(spec)
+                f'Parameter spec {spec} requires both "min_value" and "max_value".'
             )
     else:
-        raise ValueError("Unknown parameter type: {}.".format(param["type"]))
+        raise ValueError(f'Unknown parameter type: {param["type"]}.')
 
 
 def _convert_hyperparams_to_vizier_params(
@@ -261,8 +234,7 @@ def _convert_hyperparams_to_vizier_params(
     """Converts HyperParameters to a list of ParameterSpec in study_config."""
     param_type = []
     for hp in hyperparams.space:
-        param = {}
-        param["parameter"] = hp.name
+        param = {"parameter": hp.name}
         if isinstance(hp, hp_module.Choice):
             values = hp.values
             if isinstance(values[0], str):
@@ -279,7 +251,7 @@ def _convert_hyperparams_to_vizier_params(
                     "max_value": hp.max_value,
                 }
                 if hp.sampling is not None:
-                    param.update(_get_scale_type(hp.sampling))
+                    param |= _get_scale_type(hp.sampling)
             else:
                 # Note: hp.max_value is inclusive, while the end index of
                 # range() is exclusive, hence the +1
@@ -312,8 +284,7 @@ def _convert_hyperparams_to_vizier_params(
                 param["type"] = _DISCRETE
                 param["discrete_value_spec"] = {"values": [float(hp.value)]}
         else:
-            raise ValueError(
-                "`HyperParameter` type not recognized: {}".format(hp))
+            raise ValueError(f"`HyperParameter` type not recognized: {hp}")
 
         param_type.append(param)
 
@@ -368,8 +339,7 @@ def convert_hyperparams_to_hparams(
         elif isinstance(hp, hp_module.Fixed):
             hparams_domain = hparams_api.Discrete([hp.value])
         else:
-            raise ValueError(
-                "`HyperParameter` type not recognized: {}".format(hp))
+            raise ValueError(f"`HyperParameter` type not recognized: {hp}")
 
         hparams_key = hparams_api.HParam(hp.name, hparams_domain)
         hparams[hparams_key] = hparams_value
@@ -414,8 +384,7 @@ def format_objective(
                 for m in objective
             ]
     raise TypeError(
-        "Objective should be either string or oracle_module.Objective, "
-        "found {}".format(objective)
+        f"Objective should be either string or oracle_module.Objective, found {objective}"
     )
 
 
@@ -534,8 +503,7 @@ def convert_completed_vizier_trial_to_keras_trial(
     # set stepCount = 0.
     final_measurement = vizier_trial.get("finalMeasurement")
     if not final_measurement:
-        raise ValueError('"finalMeasurement" not found in this trial {}'
-                         .format(vizier_trial))
+        raise ValueError(f'"finalMeasurement" not found in this trial {vizier_trial}')
 
     keras_tuner_trial.best_step = int(final_measurement.get("stepCount", 0))
     keras_tuner_trial.score = final_measurement["metrics"][0].get("value")
@@ -548,6 +516,4 @@ def _format_sampling(scale_type: Text) -> Optional[Text]:
         return _SAMPLING_LINEAR
     if scale_type == _LOG_SCALE:
         return _SAMPLING_LOG
-    if scale_type == _REVERSE_LOG_SCALE:
-        return _SAMPLING_REVERSE_LOG
-    return None
+    return _SAMPLING_REVERSE_LOG if scale_type == _REVERSE_LOG_SCALE else None

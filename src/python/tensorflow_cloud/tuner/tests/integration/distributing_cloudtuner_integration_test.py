@@ -14,6 +14,7 @@
 # limitations under the License.
 """Integration tests for Distributing Cloud Tuner."""
 
+
 import contextlib
 import io
 import os
@@ -36,7 +37,7 @@ _PROJECT_ID = os.environ["PROJECT_ID"]
 _REGION = os.environ["REGION"]
 
 # Study ID for testing
-_STUDY_ID_BASE = "dct_{}".format((os.environ["BUILD_ID"]).replace("-", "_"))
+_STUDY_ID_BASE = f'dct_{os.environ["BUILD_ID"].replace("-", "_")}'
 
 # The base docker image to use for the remote environment.
 _DOCKER_IMAGE = os.environ["DOCKER_IMAGE"]
@@ -53,10 +54,7 @@ _HPS.Int("num_layers", 2, 10)
 def _load_data(dir_path=None):
     """Loads and prepares data."""
 
-    mnist_file_path = None
-    if dir_path:
-        mnist_file_path = os.path.join(dir_path, "mnist.npz")
-
+    mnist_file_path = os.path.join(dir_path, "mnist.npz") if dir_path else None
     (x, y), (val_x, val_y) = keras.datasets.mnist.load_data(mnist_file_path)
     x = x.astype("float32") / 255.0
     val_x = val_x.astype("float32") / 255.0
@@ -133,7 +131,7 @@ class DistributingCloudTunerIntegrationTest(
 
     def testCloudTunerHyperparameters(self):
         """Test case to configure Distributing Tuner with HyperParameters."""
-        study_id = "{}_hyperparameters".format(_STUDY_ID_BASE)
+        study_id = f"{_STUDY_ID_BASE}_hyperparameters"
         self._study_id = study_id
 
         tuner = DistributingCloudTuner(

@@ -86,10 +86,7 @@ def cloud_fit(
 
     if distribution_strategy not in SUPPORTED_DISTRIBUTION_STRATEGIES:
         raise ValueError(
-            "{} is not supported. Supported Strategies are {}".format(
-                distribution_strategy,
-                list(SUPPORTED_DISTRIBUTION_STRATEGIES.keys()),
-            )
+            f"{distribution_strategy} is not supported. Supported Strategies are {list(SUPPORTED_DISTRIBUTION_STRATEGIES.keys())}"
         )
 
     if cloud_fit_utils.is_tf_v1():
@@ -170,18 +167,11 @@ def _serialize_assets(remote_dir: Text,
         )
         logging.info("validation_data was serialized successfully.")
 
-    callbacks = []
-    if "callbacks" in fit_kwargs:
-        callbacks = fit_kwargs.pop("callbacks")
-
-    # The remote component does not save the model after training. To ensure the
-    # model is saved after training completes we add a ModelCheckpoint callback,
-    # if one is not provided by the user
-    has_model_checkpoint = False
-    for callback in callbacks:
-        if issubclass(tf.keras.callbacks.ModelCheckpoint, callback.__class__):
-            has_model_checkpoint = True
-
+    callbacks = fit_kwargs.pop("callbacks") if "callbacks" in fit_kwargs else []
+    has_model_checkpoint = any(
+        issubclass(tf.keras.callbacks.ModelCheckpoint, callback.__class__)
+        for callback in callbacks
+    )
     if not has_model_checkpoint:
         callbacks.append(tf.keras.callbacks.ModelCheckpoint(
             filepath=os.path.join(remote_dir, "checkpoint"),
@@ -231,11 +221,10 @@ def _default_job_spec(
     training_inputs["workerType"] = DEFAULT_INSTANCE_TYPE
     training_inputs["masterConfig"] = {"imageUri": image_uri}
     training_inputs["workerCount"] = DEFAULT_NUM_WORKERS
-    job_spec = {"trainingInput": training_inputs}
-    job_spec["job_id"] = "cloud_fit_{}".format(
-        datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    )
-    return job_spec
+    return {
+        "trainingInput": training_inputs,
+        "job_id": f'cloud_fit_{datetime.datetime.now().strftime("%Y%m%d%H%M%S")}',
+    }
 
 
 def _submit_job(
@@ -261,7 +250,7 @@ def _submit_job(
             "Could not retrieve the Project ID, it must be provided or "
             "pre-configured in the environment."
         )
-    project_id = "projects/{}".format(project_id)
+    project_id = f"projects/{project_id}"
 
     # Submit job to AIP Training
     logging.info(
@@ -284,8 +273,7 @@ def _submit_job(
         request.execute()
     except Exception as e:
         raise RuntimeError(
-            "Submitting job to AI Platform Training failed with error: "
-            "{}".format(e)
+            f"Submitting job to AI Platform Training failed with error: {e}"
         )
 
     logging.info("Job submitted successfully to AI Platform Training.")
